@@ -80,9 +80,6 @@ def main():
                     "--device", args.device,
                     "--output-dir", str(out_dir),
                 ]
-                    "--device", args.device,
-                    "--output-dir", str(out_dir),
-                ]
 
             print(f"\n{'='*70}")
             print(f"RUNNING MODEL: {m.upper()} | SEED: {seed} | EPOCHS: {args.epochs}")
