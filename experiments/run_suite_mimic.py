@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--data-root", type=Path, default=ROOT / "data/mimic_cxr")
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--device", choices=["auto", "cpu", "mps", "cuda"], default="auto")
     args = parser.parse_args()
 
@@ -50,6 +51,7 @@ def main():
                     "--epochs", str(args.epochs),
                     "--seed", str(seed),
                     "--batch-size", str(args.batch_size),
+                    "--num-workers", str(args.num_workers),
                     "--device", args.device,
                     "--output-dir", str(out_dir),
                 ]
@@ -62,6 +64,7 @@ def main():
                     "--epochs", str(args.epochs),
                     "--seed", str(seed),
                     "--batch-size", str(args.batch_size),
+                    "--num-workers", str(args.num_workers),
                     "--device", args.device,
                     "--output-dir", str(out_dir),
                 ]
@@ -73,6 +76,10 @@ def main():
                     "--epochs", str(args.epochs),
                     "--seed", str(seed),
                     "--batch-size", str(args.batch_size),
+                    "--num-workers", str(args.num_workers),
+                    "--device", args.device,
+                    "--output-dir", str(out_dir),
+                ]
                     "--device", args.device,
                     "--output-dir", str(out_dir),
                 ]

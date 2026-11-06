@@ -36,7 +36,9 @@ from src.metrics import binary_metrics, concept_metrics, select_validation_thres
 
 
 def write_json(path, value):
-    Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
 
 
 def write_csv(path, rows, fields=None):
