@@ -351,15 +351,15 @@ Phase 9:                                                                        
 
 | Hạng mục Công việc | Trạng thái | Chi tiết Thực tế Đạt được |
 |:---|:---:|:---|
-| **Nghiên cứu tài liệu & Đề cương chi tiết** |  **Hoàn thành** | Đề cương 24 tuần, công thức ECBM và cấu trúc 6 chương chuyên biệt cho 14 Concepts + Tử vong MIMIC-IV đã chốt. |
-| **Tải và lưu trữ dữ liệu MIMIC-CXR 5.000 ảnh** |  **Hoàn thành** | Đã tải đủ 100% (**5.000 / 5.000 ảnh**, 0 lỗi) và lưu tại `data/mimic_cxr/`. |
-| **Dữ liệu lâm sàng MIMIC-IV v3.1** |  **Hoàn thành** | Đã có sẵn trên máy tại `Desktop/Project/mimic-iv-3.1/` (chứa `hosp/admissions.csv.gz`). |
-| **Script ghép nối nhãn tử vong (Linkage)** | ⏳ **Bước tiếp theo** | Viết script ghép `selection_manifest.csv` với `admissions.csv.gz` để gán nhãn `hospital_expire_flag`. |
-| **Module `MimicCxrDataset` trong `src/dataset.py`** | ⏳ **Bước tiếp theo** | Thiết kế tương thích PyTorch DataLoader, hỗ trợ đọc ảnh X-quang, 14 nhãn CheXpert và nhãn tử vong. |
-| **Tệp cấu hình `label_mapping.json` cho 14 concepts** | ⏳ **Bước tiếp theo** | Định nghĩa ánh xạ cho đủ 14 triệu chứng CheXpert và nhãn tử vong. |
-| **Scripts huấn luyện (Black-box, CBM, ECBM)** | ⏳ **Bước tiếp theo** | Chuẩn bị `run_blackbox_mimic.py`, `run_cbm_mimic.py`, `run_ecbm_mimic.py`. |
-| **Thực nghiệm Can thiệp (Intervention) 14 concepts** | ⏳ **Dự kiến Tuần 17** | Thiết kế can thiệp $m = 0 \dots 14$ đã sẵn sàng. |
-| **Viết bản thảo Luận văn 6 chương** | ⏳ **Dự kiến Tuần 18** | Đã lập dàn ý chi tiết từng mục, sẵn sàng điền nội dung. |
+| **Nghiên cứu tài liệu & Đề cương chi tiết** | ✅ **Hoàn thành** | Đề cương 24 tuần, công thức ECBM và cấu trúc 6 chương chuyên biệt cho 14 Concepts + Tử vong MIMIC-IV đã chốt. |
+| **Tải và lưu trữ dữ liệu MIMIC-CXR 5.000 ảnh** | ✅ **Hoàn thành** | Đã tải đủ 100% (**5.000 / 5.000 ảnh**, 0 lỗi) và lưu tại `data/mimic_cxr/`. |
+| **Dữ liệu lâm sàng MIMIC-IV v3.1 & Ghép nối** | ✅ **Hoàn thành** | Đã tạo manifest bất biến `manifest_mortality.csv` (Train: 4.000, Val: 500, Test: 500, 0 rò rỉ bệnh nhân). |
+| **Module Dataset & Transforms chuẩn** | ✅ **Hoàn thành** | `src/dataset.py` hỗ trợ LetterboxResize 224x224, nạp 14 khái niệm CheXpert và nhãn tử vong. |
+| **Mô hình Black-box Baseline (3 Seeds)** | ✅ **Hoàn thành** | **Đã huấn luyện đủ 3 seeds (42, 123, 2026)** với 30 epochs/run: **Macro-F1 = 0.5729 ± 0.0091**, **Bal-Acc = 0.6496 ± 0.0072**, **ROC-AUC = 0.7499 ± 0.0224**. |
+| **Mô hình CBM (Soft & Hard CBM)** | 🔄 **Đang thực nghiệm** | Codebase sẵn sàng 100% trên GitHub `LungXplain`, script đa seed `run_suite_mimic.py` đang chạy trên Kaggle GPU. |
+| **Mô hình Energy-Based CBM (ECBM)** | 🔄 **Sẵn sàng huấn luyện** | Triển khai Exact Inference qua 16.384 trạng thái (~0.7ms/batch) và Clamped Energy Intervention. |
+| **Thực nghiệm Can thiệp (Intervention) 14 concepts** | ⏳ **Sẵn sàng chạy** | Script `run_intervention_mimic.py` đã hoàn tất, chờ nạp checkpoint từ CBM/ECBM. |
+| **Viết bản thảo Luận văn 6 chương** | ⏳ **Dự kiến Tuần 18** | Đã lập dàn ý chi tiết từng mục, sẵn sàng điền nội dung kết quả thực nghiệm. |
 
 ---
 
