@@ -57,6 +57,7 @@ def aggregate_model(model_name: str, base_dir: Path, seeds: list[int]) -> dict:
             "model": model_name,
             "n_seeds": 0,
             "available_seeds": [],
+            "accuracy": {"mean": 0.0, "std": 0.0, "str": "N/A"},
             "macro_f1": {"mean": 0.0, "std": 0.0, "str": "N/A"},
             "balanced_acc": {"mean": 0.0, "std": 0.0, "str": "N/A"},
             "roc_auc": {"mean": 0.0, "std": 0.0, "str": "N/A"},
@@ -67,11 +68,13 @@ def aggregate_model(model_name: str, base_dir: Path, seeds: list[int]) -> dict:
         }
 
     # Extract target metrics at validation-tuned threshold
-    f1_list, bacc_list, roc_auc_list, pr_auc_list = [], [], [], []
+    acc_list, f1_list, bacc_list, roc_auc_list, pr_auc_list = [], [], [], [], []
     c_f1_list, emr_list = [], []
 
     for r in records:
         m = r["data"].get("test_at_validation_threshold") or r["data"].get("test_y_at_validation_threshold", {})
+        if "accuracy" in m:
+            acc_list.append(m["accuracy"])
         if "macro_f1" in m:
             f1_list.append(m["macro_f1"])
         if "balanced_accuracy" in m:
@@ -88,6 +91,7 @@ def aggregate_model(model_name: str, base_dir: Path, seeds: list[int]) -> dict:
         if "exact_match_ratio" in cm:
             emr_list.append(cm["exact_match_ratio"])
 
+    acc_m, acc_s = mean_std(acc_list)
     f1_m, f1_s = mean_std(f1_list)
     bacc_m, bacc_s = mean_std(bacc_list)
     roc_m, roc_s = mean_std(roc_auc_list)
@@ -99,6 +103,7 @@ def aggregate_model(model_name: str, base_dir: Path, seeds: list[int]) -> dict:
         "model": model_name,
         "n_seeds": len(records),
         "available_seeds": [r["seed"] for r in records],
+        "accuracy": {"mean": acc_m, "std": acc_s, "str": format_ms(acc_m, acc_s, percent=True)},
         "macro_f1": {"mean": f1_m, "std": f1_s, "str": format_ms(f1_m, f1_s)},
         "balanced_acc": {"mean": bacc_m, "std": bacc_s, "str": format_ms(bacc_m, bacc_s)},
         "roc_auc": {"mean": roc_m, "std": roc_s, "str": format_ms(roc_m, roc_s)},
@@ -128,18 +133,19 @@ def main():
         results.append(agg)
 
     # Print Table
-    header = f"| {'Model':<18} | {'Seeds':<8} | {'Macro-F1':<17} | {'Balanced Acc':<17} | {'ROC-AUC':<17} | {'Concept F1':<17} |"
+    header = f"| {'Model':<16} | {'Seeds':<6} | {'Accuracy':<17} | {'Macro-F1':<17} | {'Balanced Acc':<17} | {'ROC-AUC':<17} | {'Concept F1':<17} |"
     print(header)
-    print(f"|{'-'*20}|{'-'*10}|{'-'*19}|{'-'*19}|{'-'*19}|{'-'*19}|")
+    print(f"|{'-'*18}|{'-'*8}|{'-'*19}|{'-'*19}|{'-'*19}|{'-'*19}|{'-'*19}|")
 
     for r in results:
         m_name = r["model"].upper()
         s_count = f"{r['n_seeds']}/{len(args.seeds)}"
+        acc_str = r.get("accuracy", {}).get("str", "N/A")
         f1_str = r["macro_f1"]["str"]
         bacc_str = r["balanced_acc"]["str"]
         roc_str = r["roc_auc"]["str"]
         c_str = r["concept_macro_f1"]["str"]
-        print(f"| {m_name:<18} | {s_count:<8} | {f1_str:<17} | {bacc_str:<17} | {roc_str:<17} | {c_str:<17} |")
+        print(f"| {m_name:<16} | {s_count:<6} | {acc_str:<17} | {f1_str:<17} | {bacc_str:<17} | {roc_str:<17} | {c_str:<17} |")
 
     print(f"{'='*80}\n")
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
