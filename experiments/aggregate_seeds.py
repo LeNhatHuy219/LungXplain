@@ -53,7 +53,18 @@ def aggregate_model(model_name: str, base_dir: Path, seeds: list[int]) -> dict:
             continue
 
     if not records:
-        return {"model": model_name, "n_seeds": 0, "records": []}
+        return {
+            "model": model_name,
+            "n_seeds": 0,
+            "available_seeds": [],
+            "macro_f1": {"mean": 0.0, "std": 0.0, "str": "N/A"},
+            "balanced_acc": {"mean": 0.0, "std": 0.0, "str": "N/A"},
+            "roc_auc": {"mean": 0.0, "std": 0.0, "str": "N/A"},
+            "pr_auc": {"mean": 0.0, "std": 0.0, "str": "N/A"},
+            "concept_macro_f1": {"mean": 0.0, "std": 0.0, "str": "N/A"},
+            "exact_match_ratio": {"mean": 0.0, "std": 0.0, "str": "N/A"},
+            "records": [],
+        }
 
     # Extract target metrics at validation-tuned threshold
     f1_list, bacc_list, roc_auc_list, pr_auc_list = [], [], [], []
