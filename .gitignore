@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+data/
+mimic-iv-3.1/
+results/
+checkpoints/
