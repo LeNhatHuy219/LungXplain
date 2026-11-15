@@ -1,9 +1,9 @@
-# LungXplain: Interpretable In-Hospital Mortality Prediction from Chest Radiographs and Pre-Imaging Clinical Data with Concept Bottlenecks and Explainable Boosting
+# ACC-ECBM: Interpretable In-Hospital Mortality Prediction from Chest Radiographs and Pre-Imaging Clinical Data with Concept Bottlenecks and Explainable Boosting
 
 This repo is the official implementation of our paper:
 
-**Interpretable In-Hospital Mortality Prediction from Chest Radiographs and Pre-Imaging Clinical Data with Concept
-Bottlenecks and Explainable Boosting**
+**ACC-ECBM: Interpretable In-Hospital Mortality Prediction from Chest Radiographs and Pre-Imaging Clinical Data with
+Concept Bottlenecks and Explainable Boosting**
 
 Huy Nhat-Le, Khanh Quoc Tran-Duong
 
