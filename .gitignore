@@ -1,8 +1,11 @@
 __pycache__/
 *.py[cod]
-.venv/
+.venv*/
 .DS_Store
+
+# MIMIC data, derived files, model outputs and checkpoints are never committed
 data/
-mimic-iv-3.1/
 results/
 checkpoints/
+mimic-iv-3.1/
+mimic-iv-ed-*/

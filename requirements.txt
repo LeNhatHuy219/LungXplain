@@ -1,5 +1,15 @@
+# Local scripts: dataset construction, Kaggle input, analysis and figures.
+# The Kaggle notebooks use the Kaggle image and install interpret-core==0.7.8 themselves.
+numpy>=1.26
+pandas==2.3.2
+pyarrow==23.0.1
+Pillow>=10.1.0
 torch>=2.2,<3
 torchvision>=0.17,<1
-numpy>=1.26,<3
-scikit-learn>=1.4,<2
-Pillow>=10,<13
+scikit-learn>=1.6,<2
+scipy>=1.8,<2
+joblib>=1.4,<2
+interpret-core==0.7.8
+matplotlib>=3.8
+requests>=2.31
+kaggle>=1.6

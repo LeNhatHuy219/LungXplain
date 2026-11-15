@@ -37,6 +37,56 @@ CHEXPERT_14_CONCEPTS = [
     "Support Devices",
 ]
 
+
+def _parse_ts(value: str):
+    value = (value or "").strip()
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+
+
+def parse_study_datetime(date_str: str, time_str: str):
+    """Ghép StudyDate (YYYYMMDD) và StudyTime (HHMMSS[.fff]); None nếu không parse được."""
+    try:
+        d = datetime.strptime((date_str or "").strip(), "%Y%m%d")
+    except ValueError:
+        return None
+    t = (time_str or "").strip().split(".")[0].zfill(6)
+    try:
+        return d.replace(hour=int(t[0:2]), minute=int(t[2:4]), second=int(t[4:6]))
+    except ValueError:
+        return d
+
+
+def match_admission(sub_adms, study_dt):
+    """Trả về (admission, status). Chỉ nhận ảnh nằm trong [start, dischtime],
+    start = min(edregtime, admittime) để giữ ảnh chụp tại ED trước khi nhập viện.
+    Không ghép được -> (None, lý do), tuyệt đối không mặc định nhãn 0."""
+    if not sub_adms:
+        return None, "no_admission_for_subject"
+    if study_dt is None:
+        return None, "unparseable_study_time"
+    hits = []
+    for a in sub_adms:
+        admit, disch = _parse_ts(a.get("admittime")), _parse_ts(a.get("dischtime"))
+        if admit is None or disch is None:
+            continue
+        ed = _parse_ts(a.get("edregtime"))
+        start = min(admit, ed) if ed else admit
+        if start <= study_dt <= disch:
+            hits.append((admit, a))
+    if not hits:
+        return None, "outside_admission_window"
+    hits.sort(key=lambda x: x[0])
+    # Nếu nhiều lượt chồng nhau, lấy lượt có admittime muộn nhất không vượt quá lúc chụp
+    started = [h for h in hits if h[0] <= study_dt]
+    chosen = (started or hits)[-1][1]
+    return chosen, ("matched" if len(hits) == 1 else "matched_multi_overlap")
+
+
 def main():
     print(f"--- Đang chuẩn bị cohort MIMIC-CXR + MIMIC-IV tại: {PROJECT_ROOT} ---")
     manifest_path = DATA_DIR / "selection_manifest.csv"
@@ -64,6 +114,7 @@ def main():
             admissions_by_subject.setdefault(row["subject_id"], []).append(row)
 
     out_records = []
+    excluded_records = []
     matched_admissions = 0
     in_hospital_deaths = 0
 
@@ -75,32 +126,26 @@ def main():
         # Chuẩn hóa tên split thành train / valid / test
         split_norm = "valid" if split in ("val", "validate") else split
 
-        # Lấy ngày chụp X-quang
+        # Lấy thời điểm chụp X-quang (StudyDate + StudyTime; StudyTime không bị khử định danh)
         meta = meta_dict.get(dic_id, {})
         study_date_str = meta.get("StudyDate", "")
+        study_dt = parse_study_datetime(study_date_str, meta.get("StudyTime", ""))
 
-        mortality = 0
-        matched_hadm_id = ""
-        admission_type = ""
+        # Ghép theo cửa sổ thời gian; không đoán nhãn khi không ghép được
+        adm, status = match_admission(admissions_by_subject.get(sub_id), study_dt)
+        if adm is None:
+            excluded_records.append({
+                "source_index": idx, "subject_id": sub_id, "study_id": std_id,
+                "dicom_id": dic_id, "split": split_norm, "exclusion_reason": status,
+            })
+            continue
 
-        if sub_id in admissions_by_subject:
-            matched_admissions += 1
-            sub_adms = admissions_by_subject[sub_id]
-            # Ưu tiên admission bao trùm ngày chụp, hoặc gần ngày chụp nhất
-            try:
-                study_date = datetime.strptime(study_date_str, "%Y%m%d").date()
-                best_adm = min(
-                    sub_adms,
-                    key=lambda a: abs((datetime.strptime(a["admittime"][:10], "%Y-%m-%d").date() - study_date).days)
-                )
-                mortality = int(best_adm["hospital_expire_flag"])
-                matched_hadm_id = best_adm["hadm_id"]
-                admission_type = best_adm.get("admission_type", "")
-            except Exception:
-                # Nếu không parse được ngày, kiểm tra xem bệnh nhân có tử vong trong bất kỳ đợt nào
-                if any(a["hospital_expire_flag"] == "1" for a in sub_adms):
-                    mortality = 1
-
+        matched_admissions += 1
+        mortality = int(adm["hospital_expire_flag"])
+        matched_hadm_id = adm["hadm_id"]
+        admission_type = adm.get("admission_type", "")
+        # Kiểm tra chéo hospital_expire_flag với deathtime (có thể có lỗi gõ)
+        flag_deathtime_mismatch = int(mortality == 1) != int(bool(adm.get("deathtime", "").strip()))
         if mortality == 1:
             in_hospital_deaths += 1
 
@@ -130,6 +175,8 @@ def main():
             "relative_path": r["relative_path"],
             "image_path": f"data/mimic_cxr/{r['relative_path']}",
             "StudyDate": study_date_str,
+            "match_status": status,
+            "flag_deathtime_mismatch": flag_deathtime_mismatch,
             "ViewPosition": meta.get("ViewPosition", ""),
             "diagnosis": "deceased" if mortality == 1 else "survived",
             "diagnosis_binary": mortality,
@@ -150,6 +197,13 @@ def main():
     df.to_csv(out_manifest, index=False)
     print(f"Đã lưu manifest: {out_manifest} ({len(df)} mẫu)")
 
+    excluded_df = pd.DataFrame(excluded_records)
+    excluded_path = DATA_DIR / "excluded_unmatched.csv"
+    excluded_df.to_csv(excluded_path, index=False)
+    print(f"Đã loại {len(excluded_df)} ảnh không ghép được admission -> {excluded_path}")
+    if len(excluded_df):
+        print(excluded_df["exclusion_reason"].value_counts().to_string())
+
     # Tạo file label_mapping.json
     label_mapping = {
         c: {"absent": 0, "present": 1} for c in CHEXPERT_14_CONCEPTS
@@ -169,7 +223,11 @@ def main():
         "dataset": "MIMIC-CXR + MIMIC-IV Cohort",
         "total_samples": len(df),
         "total_unique_patients": df["subject_id"].nunique(),
+        "input_manifest_rows": len(manifest_rows),
         "matched_admissions_count": matched_admissions,
+        "excluded_unmatched_count": len(excluded_records),
+        "excluded_by_reason": excluded_df["exclusion_reason"].value_counts().to_dict() if len(excluded_df) else {},
+        "flag_deathtime_mismatch_count": int(df["flag_deathtime_mismatch"].sum()),
         "total_mortality_positive": in_hospital_deaths,
         "mortality_rate": round(in_hospital_deaths / len(df) * 100, 2),
         "split_counts": split_counts,
