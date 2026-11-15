@@ -7,7 +7,7 @@ Bottlenecks and Explainable Boosting**
 
 Huy Nhat-Le, Khanh Quoc Tran-Duong
 
-Ho Chi Minh City University of Technology (HCMUT), VNU-HCM, Vietnam
+Faculty of Information Technology, Ton Duc Thang University, Ho Chi Minh City, Vietnam
 
 *In preparation for Springer LNCS.* [Paper: coming soon]
 
